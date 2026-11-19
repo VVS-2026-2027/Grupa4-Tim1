@@ -1,0 +1,4 @@
+idStudenta,idTutora,iznos,nacinPlacanja,statusPlacanja
+s1,t1,25.5,Kartica,Uspjesno
+s2,t2,50.0,Cash,NaCekanju
+s3,t1,100.0,Kartica,Vraceno

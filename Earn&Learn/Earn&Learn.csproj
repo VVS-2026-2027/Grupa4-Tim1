@@ -17,4 +17,11 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
 	</ItemGroup>
+
+	<ItemGroup>
+  		<Compile Remove="Earn_Learn.Tests\**" />
+  		<Content Remove="Earn_Learn.Tests\**" />
+  		<EmbeddedResource Remove="Earn_Learn.Tests\**" />
+  		<None Remove="Earn_Learn.Tests\**" />
+	</ItemGroup>
 </Project>

@@ -1,0 +1,7 @@
+[
+  { "Iznos": 50.0, "OcekivaniUspjeh": true },
+  { "Iznos": 10000.0, "OcekivaniUspjeh": true },
+  { "Iznos": 0.0, "OcekivaniUspjeh": false },
+  { "Iznos": -15.0, "OcekivaniUspjeh": false },
+  { "Iznos": 10001.0, "OcekivaniUspjeh": false }
+]
