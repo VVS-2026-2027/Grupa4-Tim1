@@ -1,0 +1,5 @@
+studentBalance;hourPrice;expectedSuccess
+0;20;false
+19;20;false
+20;20;true
+100;20;true
