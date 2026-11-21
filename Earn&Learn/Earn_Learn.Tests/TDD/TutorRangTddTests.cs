@@ -29,6 +29,22 @@ namespace Earn_Learn.Tests
             Assert.IsTrue(rezultat);
         }
 
+        [TestMethod]
+        public void DaLiJeIstaknutiTutor_9CasovaITacnoOcjena45_VracaFalse()
+        {
+            bool rezultat = _service.DaLiJeIstaknutiTutor(9, 4.5);
+
+            Assert.IsFalse(rezultat);
+        }
+
+        [TestMethod]
+        public void DaLiJeIstaknutiTutor_Tacno10CasovaIOcjena4499_VracaFalse()
+        {
+            bool rezultat = _service.DaLiJeIstaknutiTutor(10, 4.499);
+
+            Assert.IsFalse(rezultat);
+        }
+
         // TUTOR IMA VISE OD MINIMALNOG BROJA CASOVA
         // I VISU PROSJECNU OCJENU
 

@@ -161,6 +161,8 @@ namespace Earn_Learn.Tests
         [TestMethod]
         public async Task PotvrdiPrisustvo_Validno_ObracunavaProvizijuIPlacanje()
         {
+            // Tutor sa 9 prethodno održanih časova još nema pravo na povlaštenu proviziju.
+            _tutor.BrojOdrzanihCasova = 9;
             var admin = new Korisnik { Id = "admin-1", Uloga = Uloga.SystemManager, StanjeRacuna = 0 };
             _context.Users.Add(admin);
 
@@ -184,6 +186,35 @@ namespace Earn_Learn.Tests
             Assert.AreEqual(3.0, admin.StanjeRacuna);   // 10% provizija
             Assert.AreEqual(StatusTermina.Odrzan, termin.status);
             Assert.AreEqual(3, await _context.Transakcija.CountAsync());
+        }
+
+        [TestMethod]
+        public async Task PotvrdiPrisustvo_IstaknutiTutorSaGranicnomOcjenom_ObracunavaProviziju5Posto()
+        {
+            _tutor.BrojOdrzanihCasova = 10;
+            _tutor.ProsjecnaOcjena = 4.5;
+            var admin = new Korisnik { Id = "admin-featured", Uloga = Uloga.SystemManager, StanjeRacuna = 0 };
+            _context.Users.Add(admin);
+
+            var termin = new Termin
+            {
+                id = 12,
+                idStudenta = _student.Id,
+                idTutora = _tutor.Id,
+                cijena = 30.0,
+                status = StatusTermina.Rezervisan,
+                datumIVrijeme = DateTime.Now
+            };
+            _context.Termin.Add(termin);
+            await _context.SaveChangesAsync();
+
+            var result = await _controller.PotvrdiPrisustvo(12) as JsonResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(70.0, _student.StanjeRacuna);
+            Assert.AreEqual(78.5, _tutor.StanjeRacuna); // 30 - 5% provizije
+            Assert.AreEqual(1.5, admin.StanjeRacuna);   // 5% provizija
+            Assert.AreEqual(StatusTermina.Odrzan, termin.status);
         }
 
         [TestMethod]
