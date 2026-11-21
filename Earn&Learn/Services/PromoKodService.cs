@@ -7,6 +7,9 @@ namespace Earn_Learn.Services
     public class PromoKodService
     {
         private sealed record PromoKodInfo(decimal ProcenatPopusta, DateTime DatumIsteka);
+        
+        private const decimal MaksimalniProcenat = 100m;
+        private const decimal MinimalnaCijena=0m;
         private static readonly DateTime DatumIstekaPrimjera =
             new(2099, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
@@ -20,8 +23,7 @@ namespace Earn_Learn.Services
         public decimal IzracunajCijenu(decimal osnovnaCijena, string? kod)
         {
             var promoKod = ValidirajKod(kod);
-            ValidirajRok(promoKod.DatumIsteka);
-            return IzracunajCijenu(osnovnaCijena, promoKod.ProcenatPopusta);
+            return PrimijeniPopust(osnovnaCijena, promoKod.ProcenatPopusta, promoKod.DatumIsteka);
         }
 
         public decimal IzracunajCijenu(
@@ -30,8 +32,15 @@ namespace Earn_Learn.Services
             DateTime datumIsteka)
         {
             var promoKod = ValidirajKod(kod);
+            return PrimijeniPopust(osnovnaCijena, promoKod.ProcenatPopusta, datumIsteka);
+        }
+        
+        //dodano u refactor 
+        private static decimal PrimijeniPopust(decimal osnovnaCijena, decimal procenatPopusta, DateTime datumIsteka)
+        {
             ValidirajRok(datumIsteka);
-            return IzracunajCijenu(osnovnaCijena, promoKod.ProcenatPopusta);
+            var iznosPopusta = osnovnaCijena * (procenatPopusta / MaksimalniProcenat);
+            return Math.Max(MinimalnaCijena, osnovnaCijena - iznosPopusta);
         }
 
         private static PromoKodInfo ValidirajKod(string? kod)
@@ -51,10 +60,12 @@ namespace Earn_Learn.Services
                 throw new ArgumentException("Promo kod je istekao.");
         }
 
+        /*
         private static decimal IzracunajCijenu(decimal osnovnaCijena, decimal procenatPopusta)
         {
             var novaCijena = osnovnaCijena - (osnovnaCijena * procenatPopusta / 100m);
             return Math.Max(0m, novaCijena);
         }
+        */
     }
 }
