@@ -1,9 +1,14 @@
+
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Earn_Learn.Controllers;
+using Earn_Learn.Data;
 using Earn_Learn.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Task21Tests.Infrastructure;
 
@@ -36,10 +41,11 @@ public sealed class ObavjestenjesControllerTests
 
         _fx.Db.Obavjestenje.Add(obavjestenje);
         _fx.Db.SaveChanges();
+
         return obavjestenje;
     }
 
-
+    // INDEX
 
     [TestMethod]
     public async Task Index_VracaSvaObavjestenja()
@@ -49,7 +55,9 @@ public sealed class ObavjestenjesControllerTests
 
         var result = (ViewResult)await Controller().Index();
 
-        Assert.AreEqual(2, ((System.Collections.Generic.IEnumerable<Obavjestenje>)result.Model!).Count());
+        Assert.AreEqual(
+            2,
+            ((System.Collections.Generic.IEnumerable<Obavjestenje>)result.Model!).Count());
     }
 
     [TestMethod]
@@ -57,10 +65,12 @@ public sealed class ObavjestenjesControllerTests
     {
         var result = (ViewResult)await Controller().Index();
 
-        Assert.AreEqual(0, ((System.Collections.Generic.IEnumerable<Obavjestenje>)result.Model!).Count());
+        Assert.AreEqual(
+            0,
+            ((System.Collections.Generic.IEnumerable<Obavjestenje>)result.Model!).Count());
     }
 
-  
+    // DETAILS
 
     [TestMethod]
     public async Task Details_NullId_NotFound()
@@ -85,10 +95,12 @@ public sealed class ObavjestenjesControllerTests
 
         var result = (ViewResult)await Controller().Details(obavjestenje.id);
 
-        Assert.AreEqual(obavjestenje.id, ((Obavjestenje)result.Model!).id);
+        Assert.AreEqual(
+            obavjestenje.id,
+            ((Obavjestenje)result.Model!).id);
     }
 
-
+    // CREATE
 
     [TestMethod]
     public void Create_Get_VracaFormu()
@@ -120,7 +132,8 @@ public sealed class ObavjestenjesControllerTests
     public async Task Create_Post_NevalidanModelState_VracaFormu()
     {
         var controller = Controller();
-        controller.ModelState.AddModelError("naslov", "Naslov je obavezan.");
+        controller.ModelState.AddModelError(
+            "naslov", "Naslov je obavezan.");
 
         var result = await controller.Create(new Obavjestenje());
 
@@ -128,7 +141,7 @@ public sealed class ObavjestenjesControllerTests
         Assert.AreEqual(0, _fx.Db.Obavjestenje.Count());
     }
 
-   
+    // EDIT GET
 
     [TestMethod]
     public async Task Edit_Get_NullId_NotFound()
@@ -153,8 +166,12 @@ public sealed class ObavjestenjesControllerTests
 
         var result = (ViewResult)await Controller().Edit(obavjestenje.id);
 
-        Assert.AreEqual(obavjestenje.id, ((Obavjestenje)result.Model!).id);
+        Assert.AreEqual(
+            obavjestenje.id,
+            ((Obavjestenje)result.Model!).id);
     }
+
+    // EDIT POST
 
     [TestMethod]
     public async Task Edit_Post_NepodudaranId_NotFound()
@@ -171,7 +188,9 @@ public sealed class ObavjestenjesControllerTests
     {
         var obavjestenje = Add();
         var controller = Controller();
-        controller.ModelState.AddModelError("naslov", "Naslov nije validan.");
+
+        controller.ModelState.AddModelError(
+            "naslov", "Naslov nije validan.");
 
         var result = await controller.Edit(obavjestenje.id, obavjestenje);
 
@@ -184,10 +203,14 @@ public sealed class ObavjestenjesControllerTests
         var obavjestenje = Add();
         obavjestenje.naslov = "Izmijenjen naslov";
 
-        var result = await Controller().Edit(obavjestenje.id, obavjestenje);
+        var result = await Controller().Edit(
+            obavjestenje.id, obavjestenje);
 
         Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-        Assert.AreEqual("Izmijenjen naslov", _fx.Db.Obavjestenje.Single().naslov);
+
+        Assert.AreEqual(
+            "Izmijenjen naslov",
+            _fx.Db.Obavjestenje.Single().naslov);
     }
 
     // DELETE
@@ -215,7 +238,9 @@ public sealed class ObavjestenjesControllerTests
 
         var result = (ViewResult)await Controller().Delete(obavjestenje.id);
 
-        Assert.AreEqual(obavjestenje.id, ((Obavjestenje)result.Model!).id);
+        Assert.AreEqual(
+            obavjestenje.id,
+            ((Obavjestenje)result.Model!).id);
     }
 
     [TestMethod]
@@ -236,5 +261,100 @@ public sealed class ObavjestenjesControllerTests
 
         Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
         Assert.AreEqual(0, _fx.Db.Obavjestenje.Count());
+    }
+
+    // TESTIRANJE DBUPDATECONCURRENCYEXCEPTION
+
+    [TestMethod]
+    public async Task Edit_ConcurrencyException_ObavjestenjeNePostoji_NotFound()
+    {
+        var databaseName = $"test-{Guid.NewGuid():N}";
+
+        using var db = CreateConcurrencyContext(databaseName);
+
+        var controller = _fx.Controller(
+            new ObavjestenjesController(db));
+
+        var obavjestenje = new Obavjestenje
+        {
+            id = 999,
+            idKorisnika = "korisnik-test",
+            naslov = "Test",
+            sadrzaj = "Testni sadrzaj",
+            datumSlanja = DateTime.UtcNow
+        };
+
+        var result = await controller.Edit(999, obavjestenje);
+
+        Assert.IsInstanceOfType(result, typeof(NotFoundResult));
+    }
+
+    [TestMethod]
+    public async Task Edit_ConcurrencyException_ObavjestenjePostoji_BacaIzuzetak()
+    {
+        var databaseName = $"test-{Guid.NewGuid():N}";
+
+        // Prvo kreiramo postojece obavjestenje u bazi
+        using (var seedDb = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName)
+                .Options))
+        {
+            seedDb.Obavjestenje.Add(new Obavjestenje
+            {
+                id = 100,
+                idKorisnika = "korisnik-test",
+                naslov = "Postojece obavjestenje",
+                sadrzaj = "Sadrzaj",
+                datumSlanja = DateTime.UtcNow
+            });
+
+            await seedDb.SaveChangesAsync();
+        }
+
+        using var db = CreateConcurrencyContext(databaseName);
+
+        var controller = _fx.Controller(
+            new ObavjestenjesController(db));
+
+        var obavjestenje = new Obavjestenje
+        {
+            id = 100,
+            idKorisnika = "korisnik-test",
+            naslov = "Izmijenjen naslov",
+            sadrzaj = "Izmijenjen sadrzaj",
+            datumSlanja = DateTime.UtcNow
+        };
+
+        await Assert.ThrowsExceptionAsync<DbUpdateConcurrencyException>(
+            () => controller.Edit(100, obavjestenje));
+    }
+
+    // POMOCNA METODA ZA SIMULIRANJE KONKURENCIJSKE GRESKE
+
+    private static ApplicationDbContext CreateConcurrencyContext(
+        string databaseName)
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName)
+            .AddInterceptors(new ConcurrencyExceptionInterceptor())
+            .Options;
+
+        return new ApplicationDbContext(options);
+    }
+
+    // INTERCEPTOR KOJI SIMULIRA DBUPDATECONCURRENCYEXCEPTION
+
+    private sealed class ConcurrencyExceptionInterceptor
+        : SaveChangesInterceptor
+    {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            throw new DbUpdateConcurrencyException(
+                "Simulirana konkurencijska greska.");
+        }
     }
 }
