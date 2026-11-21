@@ -83,6 +83,42 @@ public sealed class RezervacijaControllerTests
     }
 
     [TestMethod]
+    public async Task Potvrdi_ValidanPromoKod_UmanjujeCijenuPrijeProvjereStanja()
+    {
+        var student = _fx.AddUser("student-promo", Uloga.Student, balance: 20);
+        var tutor = _fx.AddUser("tutor-promo", Uloga.Tutor, hourPrice: 25);
+        var termin = _fx.AddTermin(tutor.Id);
+        _fx.LoginAs(student);
+
+        var result = (RedirectToActionResult)await _fx.Rezervacija().Potvrdi(
+            termin.id, TipInstrukcija.Online, "student20");
+
+        Assert.AreEqual("Dashboard", result.ActionName);
+        Assert.AreEqual(StatusTermina.Rezervisan, termin.status);
+        Assert.AreEqual(20d, termin.cijena);
+    }
+
+    [TestMethod]
+    public async Task Potvrdi_NepostojeciPromoKod_OdbijaRezervacijuIPostavljaGresku()
+    {
+        var student = _fx.AddUser("student-promo-invalid", Uloga.Student, balance: 100);
+        var tutor = _fx.AddUser("tutor-promo-invalid", Uloga.Tutor, hourPrice: 25);
+        var termin = _fx.AddTermin(tutor.Id);
+        _fx.LoginAs(student);
+        var controller = _fx.Rezervacija();
+
+        var result = (RedirectToActionResult)await controller.Potvrdi(
+            termin.id, TipInstrukcija.Online, "NEPOSTOJECI");
+
+        Assert.AreEqual("RezervisiTermin", result.ActionName);
+        Assert.AreEqual("Student", result.ControllerName);
+        Assert.AreEqual(termin.id, result.RouteValues!["id"]);
+        Assert.AreEqual(StatusTermina.Slobodan, termin.status);
+        Assert.AreEqual("Nepostojeci promo kod.", controller.TempData["Greska"]);
+        Assert.AreEqual(0, _fx.Db.Obavjestenje.Count());
+    }
+
+    [TestMethod]
     public async Task Potvrdi_CijenaTutoraNedostaje_KoristiCijenuTermina()
     {
         var student = _fx.AddUser("student", Uloga.Student, balance: 50);

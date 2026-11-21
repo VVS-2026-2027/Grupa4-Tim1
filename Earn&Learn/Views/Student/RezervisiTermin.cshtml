@@ -27,6 +27,12 @@
           asp-route-id="@Model.id" method="post">
         @Html.AntiForgeryToken()
 
+        <div class="mb-3">
+            <label for="promoKod" class="form-label">Promo kod (opcionalno)</label>
+            <input id="promoKod" name="promoKod" class="form-control"
+                   type="text" autocomplete="off" />
+        </div>
+
         @if (jeHibridno)
         {
             <div class="mb-4">

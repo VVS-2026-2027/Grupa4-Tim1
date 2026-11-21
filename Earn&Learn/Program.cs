@@ -1,5 +1,6 @@
 using Earn_Learn.Data;
 using Earn_Learn.Models;
+using Earn_Learn.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,7 @@ builder.Services.AddDefaultIdentity<Korisnik>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<PromoKodService>();
 
 var app = builder.Build();
 
