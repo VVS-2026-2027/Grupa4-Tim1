@@ -105,5 +105,30 @@ namespace Earn_Learn.Tests
 
             Assert.IsFalse(rezultat);
         }
+
+        // TESTIRANJE OBRACUNA PROVIZIJE (5% vs 10%)
+
+        [TestMethod]
+        public void IzracunajProviziju_IstaknutiTutor_Obracunava5Posto()
+        {
+            double provizija = _service.IzracunajProviziju(100.0, 10, 4.5);
+
+            Assert.AreEqual(5.0, provizija);
+        }
+
+        [TestMethod]
+        public void IzracunajProviziju_StandardniTutor_Obracunava10Posto()
+        {
+            double provizija = _service.IzracunajProviziju(100.0, 9, 4.8);
+
+            Assert.AreEqual(10.0, provizija);
+        }
+
+        [TestMethod]
+        public void IzracunajProviziju_NegativnaCijena_BacaArgumentException()
+        {
+            Assert.ThrowsException<ArgumentException>(() =>
+                _service.IzracunajProviziju(-20.0, 12, 4.9));
+        }
     }
 }

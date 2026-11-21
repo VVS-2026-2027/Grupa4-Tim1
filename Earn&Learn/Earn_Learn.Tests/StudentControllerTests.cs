@@ -188,6 +188,7 @@ namespace Earn_Learn.Tests
             Assert.AreEqual(3, await _context.Transakcija.CountAsync());
         }
 
+        /* Napomena: Testovi za TutorRang Service su već pokriveni u TutorRangTddTests.cs
         [TestMethod]
         public async Task PotvrdiPrisustvo_IstaknutiTutorSaGranicnomOcjenom_ObracunavaProviziju5Posto()
         {
@@ -216,7 +217,8 @@ namespace Earn_Learn.Tests
             Assert.AreEqual(1.5, admin.StanjeRacuna);   // 5% provizija
             Assert.AreEqual(StatusTermina.Odrzan, termin.status);
         }
-
+        */
+        
         [TestMethod]
         public async Task PotvrdiPrisustvo_NedovoljnoSredstavaINepostojeciTermin_VracaGresku()
         {
