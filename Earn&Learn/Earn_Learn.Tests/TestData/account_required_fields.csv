@@ -1,0 +1,5 @@
+email,password,valid
+,lozinka,false
+student@test.ba,,false
+student@test.ba,lozinka,true
+,lozinka,false
