@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Earn_Learn.Controllers;
 using Earn_Learn.Enums;
 using Earn_Learn.Models;
+using Earn_Learn.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Task21Tests.Infrastructure;
@@ -24,7 +25,7 @@ public sealed class TerminsControllerTests
 
    
     private TerminsController Controller() =>
-        _fx.Controller(new TerminsController(_fx.Db, _fx.Users.Object));
+        _fx.Controller(new TerminsController(_fx.Db, _fx.Users.Object, new TutorRangService()));
 
     private Termin AddTermin(
         string tutorId = "tutor-1",
@@ -361,6 +362,29 @@ public sealed class TerminsControllerTests
         Assert.AreEqual(3, _fx.Db.Transakcija.Count());
         Assert.AreEqual(1, _fx.Db.Obavjestenje.Count());
         Assert.IsTrue(controller.TempData.ContainsKey("Uspjeh"));
+    }
+
+    [TestMethod]
+    public async Task PotvrdPrisustvo_IstaknutiTutor_ObracunavaPovlastenuProviziju()
+    {
+        var student = _fx.AddUser("student-featured", Uloga.Student, balance: 100);
+        var tutor = _fx.AddUser("tutor-featured", Uloga.Tutor);
+        tutor.BrojOdrzanihCasova = 10;
+        tutor.ProsjecnaOcjena = 4.5;
+        var manager = _fx.AddUser("manager-featured", Uloga.SystemManager);
+        _fx.LoginAs(student);
+        var termin = AddTermin(tutorId: tutor.Id, studentId: student.Id,
+            status: StatusTermina.Rezervisan, price: 50);
+
+        var result = (RedirectToActionResult)await Controller().PotvrdPrisustvo(termin.qrKod!);
+        var savedTutor = _fx.Db.Users.Single(u => u.Id == tutor.Id);
+        var savedManager = _fx.Db.Users.Single(u => u.Id == manager.Id);
+
+        Assert.AreEqual("Dashboard", result.ActionName);
+        Assert.AreEqual(50d, student.StanjeRacuna);
+        Assert.AreEqual(47.5d, savedTutor.StanjeRacuna);
+        Assert.AreEqual(2.5d, savedManager.StanjeRacuna);
+        Assert.AreEqual(11, savedTutor.BrojOdrzanihCasova);
     }
 
     [TestMethod]

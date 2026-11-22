@@ -4,6 +4,7 @@ using Earn_Learn.Controllers;
 using Earn_Learn.Data;
 using Earn_Learn.Enums;
 using Earn_Learn.Models;
+using Earn_Learn.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -66,7 +67,8 @@ namespace Earn_Learn.Tests
             _mockUserManager.Setup(m => m.DeleteAsync(It.IsAny<Korisnik>()))
                 .ReturnsAsync(IdentityResult.Success);
 
-            _controller = new StudentController(_mockUserManager.Object, _context);
+            _controller = new StudentController(
+                _mockUserManager.Object, _context, new TutorRangService());
             TestHelper.SetupControllerContext(_controller, _student);
         }
 

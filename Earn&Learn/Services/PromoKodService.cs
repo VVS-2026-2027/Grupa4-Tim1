@@ -7,9 +7,9 @@ namespace Earn_Learn.Services
     public class PromoKodService
     {
         private sealed record PromoKodInfo(decimal ProcenatPopusta, DateTime DatumIsteka);
-        
+
         private const decimal MaksimalniProcenat = 100m;
-        private const decimal MinimalnaCijena=0m;
+        private const decimal MinimalnaCijena = 0m;
         private static readonly DateTime DatumIstekaPrimjera =
             new(2099, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
@@ -34,8 +34,7 @@ namespace Earn_Learn.Services
             var promoKod = ValidirajKod(kod);
             return PrimijeniPopust(osnovnaCijena, promoKod.ProcenatPopusta, datumIsteka);
         }
-        
-        //dodano u refactor 
+
         private static decimal PrimijeniPopust(decimal osnovnaCijena, decimal procenatPopusta, DateTime datumIsteka)
         {
             ValidirajRok(datumIsteka);
@@ -59,13 +58,5 @@ namespace Earn_Learn.Services
             if (datumIsteka <= DateTime.UtcNow)
                 throw new ArgumentException("Promo kod je istekao.");
         }
-
-        /*
-        private static decimal IzracunajCijenu(decimal osnovnaCijena, decimal procenatPopusta)
-        {
-            var novaCijena = osnovnaCijena - (osnovnaCijena * procenatPopusta / 100m);
-            return Math.Max(0m, novaCijena);
-        }
-        */
     }
 }

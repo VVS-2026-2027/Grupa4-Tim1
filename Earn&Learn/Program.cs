@@ -26,6 +26,7 @@ builder.Services.AddDefaultIdentity<Korisnik>(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<PromoKodService>();
+builder.Services.AddScoped<TutorRangService>();
 
 var app = builder.Build();
 

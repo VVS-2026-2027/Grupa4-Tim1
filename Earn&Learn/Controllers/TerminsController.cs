@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Earn_Learn.Data;
 using Earn_Learn.Models;
 using Earn_Learn.Enums;
+using Earn_Learn.Services;
 
 namespace Earn_Learn.Controllers
 {
@@ -17,11 +18,16 @@ namespace Earn_Learn.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<Korisnik> _userManager;
+        private readonly TutorRangService _tutorRangService;
 
-        public TerminsController(ApplicationDbContext context, UserManager<Korisnik> userManager)
+        public TerminsController(
+            ApplicationDbContext context,
+            UserManager<Korisnik> userManager,
+            TutorRangService tutorRangService)
         {
             _context = context;
             _userManager = userManager;
+            _tutorRangService = tutorRangService;
         }
         public async Task<IActionResult> Index()
         {
@@ -213,7 +219,10 @@ namespace Earn_Learn.Controllers
             var systemManager = await _context.Users
                 .FirstOrDefaultAsync(u => u.Uloga == Uloga.SystemManager);
 
-            double provizija = Math.Round(termin.cijena * 0.10, 2);
+            double provizija = _tutorRangService.IzracunajProviziju(
+                termin.cijena,
+                tutor.BrojOdrzanihCasova ?? 0,
+                tutor.ProsjecnaOcjena ?? 0);
             double zaradaTutora = Math.Round(termin.cijena - provizija, 2);
 
             student.StanjeRacuna -= termin.cijena;
